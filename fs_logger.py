@@ -9,6 +9,7 @@ FILE_LIST_IN = 'filelist.csv'   # file list in fullpath
 CSV_HEADER= ["at","fullpath","name","size","timestamp"]
 LOG_FILE_BASE_NAME='fs_log'
 LOG_FILE_DIRECTORY='.\\fs_log'
+MAX_LOG_FILE = 24   # keeps 24 months of log
 
 def get_info(fullpath: str):
     """
@@ -29,7 +30,9 @@ def get_info(fullpath: str):
     fp = Path(fullpath)
     info.append(fp.name)
     info.append(os.path.getsize(fp))
-    ts = datetime.datetime.fromtimestamp(fp.stat().st_ctime)
+    ts = datetime.datetime.fromtimestamp(fp.stat().st_mtime)
+# 2023-04-15 replaced to above
+#    ts = datetime.datetime.fromtimestamp(fp.stat().st_ctime)
     info.append(ts)
     return info
 
@@ -82,8 +85,18 @@ def main():
             cout.writerow(CSV_HEADER)
         cout.writerows(logs)
 
+def remove_oldest_log():
+    """
+        remove the oldest log if number of log is more than MAX_LOG_FILE
+        created: 2023/03/25
+    """
+    files = os.listdir(LOG_FILE_DIRECTORY)
+    if len(files)<=MAX_LOG_FILE:
+        return
+    files.sort()
+    os.remove(LOG_FILE_DIRECTORY + '\\' + files[0])
 
 if __name__ == '__main__':
     print('This is fs_logger, thanks.')
     main()
-
+    remove_oldest_log()
